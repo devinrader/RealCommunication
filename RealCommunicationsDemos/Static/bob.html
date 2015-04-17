@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Bob</title>
+</head>
+<body>
+
+    <h1>Bob</h1>
+    <h2>Say hello to yourself Bob:</h2>
+
+    <div>
+        <video id="local-video" autoplay></video>
+    </div>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="//ajax.aspnetcdn.com/ajax/signalr/jquery.signalr-2.2.0.min.js"></script>
+    <script src="/SignalR/Hubs"></script>
+
+    <script type="text/javascript">
+
+        var PeerConnection = window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+        var IceCandidate = window.mozRTCIceCandidate || window.RTCIceCandidate;
+        var SessionDescription = window.mozRTCSessionDescription || window.RTCSessionDescription;
+
+        navigator.getUserMedia = (navigator.getUserMedia ||
+                    navigator.webkitGetUserMedia ||
+                    navigator.mozGetUserMedia ||
+                    navigator.msGetUserMedia);
+
+        //Step 1: Define new PeerConnection
+        var peerConnection = new PeerConnection(null);
+
+        $(function () {
+
+            videoHubProxy = $.connection.videoHub;
+            $.connection.hub.logging = true;
+
+            // Step 4: Listen for the Answer and set as remote description
+            videoHubProxy.client.onAnswer = function (answer) {
+                var remoteDescription = new SessionDescription(JSON.parse(answer));
+                peerConnection.setRemoteDescription(remoteDescription,
+                    function () {
+
+                    },
+                    function (err) { console.log(err); })
+            };
+
+            if (navigator.getUserMedia) {
+                navigator.getUserMedia(
+                    { audio: true, video: true },
+                    function (stream) {
+
+                        document.querySelector("video").src = window.URL.createObjectURL(stream);
+
+                        // Step 2: Add Stream to Peer Connection
+                        peerConnection.addStream(stream);
+
+                        // Step 5: Relay ICE candidates to the Callee
+                        peerConnection.onicecandidate = function (event) {
+                            if (event.candidate) {
+                                videoHubProxy.server.candidateFound(JSON.stringify(event.candidate));
+                            }
+                        };
+
+                        // Step 3: Create Offer, set Local Description, broadcast offer to Peers
+                        peerConnection.createOffer(function (offer) {
+
+                            var localDescription = new SessionDescription(offer);
+                            peerConnection.setLocalDescription(localDescription,
+                                function () {
+                                    videoHubProxy.server.makeOffer(JSON.stringify(localDescription));
+                                },
+                                function (err) { console.log(err); });
+
+                        },
+                        function (err) { console.log(err); });
+
+                    }, function (err) { console.log(err); });
+            }
+
+            $.connection.hub.start();
+
+        });
+    </script>
+</body>
+</html>

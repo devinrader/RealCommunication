@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Alice</title>
+</head>
+<body>
+
+    <h1>Alice</h1>
+    <h2>Say hello to Bob, Alice:</h2>
+
+    <div>
+        <video id="remote-video" autoplay></video>
+    </div>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="//ajax.aspnetcdn.com/ajax/signalr/jquery.signalr-2.2.0.min.js"></script>
+    <script src="/SignalR/Hubs"></script>
+
+    <script type="text/javascript">
+
+        var PeerConnection = window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+        var IceCandidate = window.mozRTCIceCandidate || window.RTCIceCandidate;
+        var SessionDescription = window.mozRTCSessionDescription || window.RTCSessionDescription;
+
+        navigator.getUserMedia = (navigator.getUserMedia ||
+                   navigator.webkitGetUserMedia ||
+                   navigator.mozGetUserMedia ||
+                   navigator.msGetUserMedia);
+
+        //Step 1: Create a new PeerConnection
+        var peerConnection = new PeerConnection(null);
+
+        //Step 5: Listen for the remote stream and set to video element
+        peerConnection.onaddstream = function (event) {
+            var video = document.querySelector("video");
+            video.src = window.URL.createObjectURL(event.stream);
+            video.play();
+        };
+
+        $(function () {
+
+            videoHubProxy = $.connection.videoHub;
+            $.connection.hub.logging = true;
+
+            //Step 4: Listen for new ICE candidates and add to the PeerConnection
+            videoHubProxy.client.onCandidate = function (candidate) {
+                var iceCandidate = new IceCandidate(JSON.parse(candidate));
+                peerConnection.addIceCandidate(iceCandidate);
+            };
+
+            //Step 2: Listen for offer and setRemoteDescription
+            videoHubProxy.client.onOffer = function (offer) {
+
+                var remoteDescription = new SessionDescription(JSON.parse(offer));
+                peerConnection.setRemoteDescription(remoteDescription,
+                    function () {
+
+                        peerConnection.createAnswer(function (answer) {
+
+                            var localDescription = new SessionDescription(answer);
+                            peerConnection.setLocalDescription(localDescription,
+                                function () {
+                                    videoHubProxy.server.sendAnswer(JSON.stringify(localDescription));
+                                },
+                               function (err) { console.log(err); });
+
+                        },
+                        function (err) { console.log(err); });
+
+                    },
+                    function (err) { console.log(err); });
+            };
+
+            //Step 3: Create answer, setLocalDescription and send to offerer
+
+            $.connection.hub.start();
+
+        });
+
+
+    </script>
+</body>
+</html>
