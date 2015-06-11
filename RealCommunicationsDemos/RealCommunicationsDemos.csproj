@@ -116,8 +116,7 @@
   <ItemGroup>
     <Content Include="Global.asax" />
     <Content Include="Static\alice.html" />
-    <Content Include="Static\basicaudio.html" />
-    <Content Include="Static\basicvideo.html" />
+    <Content Include="Static\basicmedia.html" />
     <Content Include="Static\bob.html" />
     <Content Include="Web.config" />
   </ItemGroup>
@@ -133,6 +132,7 @@
   <ItemGroup>
     <Content Include="Views\web.config" />
     <Content Include="packages.config" />
+    <None Include="Properties\PublishProfiles\twiliovideo.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

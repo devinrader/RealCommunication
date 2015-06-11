@@ -27,23 +27,18 @@
                     navigator.mozGetUserMedia ||
                     navigator.msGetUserMedia);
 
-        //Step 1: Define new PeerConnection
-        var peerConnection = new PeerConnection(null);
+        var options = { 'iceServers': null }
+
+        // 1: Define new peer connection
 
         $(function () {
 
-            videoHubProxy = $.connection.videoHub;
+            signalingServer = $.connection.videoHub;
             $.connection.hub.logging = true;
 
-            // Step 4: Listen for the Answer and set as remote description
-            videoHubProxy.client.onAnswer = function (answer) {
-                var remoteDescription = new SessionDescription(JSON.parse(answer));
-                peerConnection.setRemoteDescription(remoteDescription,
-                    function () {
+            // Step 5: Listen for the Answer and set as remote description
 
-                    },
-                    function (err) { console.log(err); })
-            };
+            // Step 4: Listen for ICE candidates from Alice
 
             if (navigator.getUserMedia) {
                 navigator.getUserMedia(
@@ -53,29 +48,14 @@
                         document.querySelector("video").src = window.URL.createObjectURL(stream);
 
                         // Step 2: Add Stream to Peer Connection
-                        peerConnection.addStream(stream);
-
-                        // Step 5: Relay ICE candidates to the Callee
-                        peerConnection.onicecandidate = function (event) {
-                            if (event.candidate) {
-                                videoHubProxy.server.candidateFound(JSON.stringify(event.candidate));
-                            }
-                        };
 
                         // Step 3: Create Offer, set Local Description, broadcast offer to Peers
-                        peerConnection.createOffer(function (offer) {
 
-                            var localDescription = new SessionDescription(offer);
-                            peerConnection.setLocalDescription(localDescription,
-                                function () {
-                                    videoHubProxy.server.makeOffer(JSON.stringify(localDescription));
-                                },
-                                function (err) { console.log(err); });
-
-                        },
-                        function (err) { console.log(err); });
-
-                    }, function (err) { console.log(err); });
+                    },
+                    function(err) {
+                        console.log(err);
+                    }
+                );
             }
 
             $.connection.hub.start();
@@ -84,3 +64,4 @@
     </script>
 </body>
 </html>
+ 

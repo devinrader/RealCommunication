@@ -27,49 +27,20 @@
                    navigator.mozGetUserMedia ||
                    navigator.msGetUserMedia);
 
-        //Step 1: Create a new PeerConnection
-        var peerConnection = new PeerConnection(null);
+        var options = { 'iceServers': null };
+
+        //Step 1: Create a new peer connection
 
         //Step 5: Listen for the remote stream and set to video element
-        peerConnection.onaddstream = function (event) {
-            var video = document.querySelector("video");
-            video.src = window.URL.createObjectURL(event.stream);
-            video.play();
-        };
 
         $(function () {
 
-            videoHubProxy = $.connection.videoHub;
+            signalingServer = $.connection.videoHub;
             $.connection.hub.logging = true;
 
-            //Step 4: Listen for new ICE candidates and add to the PeerConnection
-            videoHubProxy.client.onCandidate = function (candidate) {
-                var iceCandidate = new IceCandidate(JSON.parse(candidate));
-                peerConnection.addIceCandidate(iceCandidate);
-            };
+            //Step 4: Find ICE candidates and send them to Bob
 
-            //Step 2: Listen for offer and setRemoteDescription
-            videoHubProxy.client.onOffer = function (offer) {
-
-                var remoteDescription = new SessionDescription(JSON.parse(offer));
-                peerConnection.setRemoteDescription(remoteDescription,
-                    function () {
-
-                        peerConnection.createAnswer(function (answer) {
-
-                            var localDescription = new SessionDescription(answer);
-                            peerConnection.setLocalDescription(localDescription,
-                                function () {
-                                    videoHubProxy.server.sendAnswer(JSON.stringify(localDescription));
-                                },
-                               function (err) { console.log(err); });
-
-                        },
-                        function (err) { console.log(err); });
-
-                    },
-                    function (err) { console.log(err); });
-            };
+            //Step 2: Listen for offer and setRemoteDescription 
 
             //Step 3: Create answer, setLocalDescription and send to offerer
 
