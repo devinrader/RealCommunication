@@ -13,6 +13,23 @@
                        navigator.mozGetUserMedia ||
                        navigator.msGetUserMedia);
 
+
+        if (navigator.getUserMedia) {
+
+            navigator.getUserMedia(
+
+                { 'audio': true, 'video':true },
+
+                function (stream) {
+
+                    document.querySelector('video').src = window.URL.createObjectURL(stream);
+
+                },
+                function (err) { }
+
+                );
+
+        }
     </script>
 </body>
 </html>

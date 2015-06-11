@@ -27,9 +27,10 @@
                     navigator.mozGetUserMedia ||
                     navigator.msGetUserMedia);
 
-        var options = { 'iceServers': null }
+        var options = { 'iceServers': null };
 
         // 1: Define new peer connection
+        var pc = new PeerConnection(null);
 
         $(function () {
 
@@ -37,8 +38,23 @@
             $.connection.hub.logging = true;
 
             // Step 5: Listen for the Answer and set as remote description
+            signalingServer.client.onAnswer = function (answer) {
+
+                var rd = new SessionDescription(JSON.parse(answer));
+
+                pc.setRemoteDescription(rd, function () { }, function (err) { });
+
+
+            }
 
             // Step 4: Listen for ICE candidates from Alice
+            signalingServer.client.onCandidate = function (candidate) {
+
+                var ice = new IceCandidate(JSON.parse(candidate));
+
+                pc.addIceCandidate(ice, function () { }, function (err) { });
+
+            }
 
             if (navigator.getUserMedia) {
                 navigator.getUserMedia(
@@ -48,8 +64,21 @@
                         document.querySelector("video").src = window.URL.createObjectURL(stream);
 
                         // Step 2: Add Stream to Peer Connection
+                        pc.addStream(stream);
 
                         // Step 3: Create Offer, set Local Description, broadcast offer to Peers
+                        pc.createOffer(function (offer) {
+
+                            var ld = new SessionDescription(offer);
+                            pc.setLocalDescription(ld, function () {
+
+                                signalingServer.server.makeOffer(JSON.stringify(ld));
+
+                            }, function (err) { })
+
+
+                        }, function (err) { });
+
 
                     },
                     function(err) {

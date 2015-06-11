@@ -30,8 +30,15 @@
         var options = { 'iceServers': null };
 
         //Step 1: Create a new peer connection
+        var pc = new PeerConnection(null);
 
         //Step 5: Listen for the remote stream and set to video element
+        pc.onaddstream = function (event) {
+            if (event.stream) {
+                document.querySelector('video').src = window.URL.createObjectURL(event.stream);
+            }
+        }
+
 
         $(function () {
 
@@ -39,8 +46,36 @@
             $.connection.hub.logging = true;
 
             //Step 4: Find ICE candidates and send them to Bob
+            pc.onicecandidate = function (event) {
+                if (event.candidate) {
+                    signalingServer.server.candidateFound(JSON.stringify(event.candidate));
+                }
+            }
 
             //Step 2: Listen for offer and setRemoteDescription 
+            signalingServer.client.onOffer = function (offer) {
+
+                var rd = new SessionDescription(JSON.parse(offer));
+
+                pc.setRemoteDescription(rd, function () {
+
+                    pc.createAnswer(function (answer) {
+
+                        var ld = new SessionDescription(answer);
+                        pc.setLocalDescription(ld, function () {
+
+                            signalingServer.server.sendAnswer(JSON.stringify(ld));
+
+
+                        }, function (err) { });
+
+                    }, function (err) { });
+
+
+                }, function (err) { });
+
+            }
+
 
             //Step 3: Create answer, setLocalDescription and send to offerer
 
