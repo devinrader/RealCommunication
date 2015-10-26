@@ -30,6 +30,7 @@
         var options = { 'iceServers': null };
 
         //Step 1: Create a new peer connection
+        // To configure STUN and TURN servers pass the options object into the contructor
         var pc = new PeerConnection(null);
 
         //Step 5: Listen for the remote stream and set to video element
@@ -38,7 +39,6 @@
                 document.querySelector('video').src = window.URL.createObjectURL(event.stream);
             }
         }
-
 
         $(function () {
 
@@ -59,6 +59,7 @@
 
                 pc.setRemoteDescription(rd, function () {
 
+                    //Step 3: Create answer, setLocalDescription and send to offerer
                     pc.createAnswer(function (answer) {
 
                         var ld = new SessionDescription(answer);
@@ -73,17 +74,10 @@
 
 
                 }, function (err) { });
-
             }
 
-
-            //Step 3: Create answer, setLocalDescription and send to offerer
-
             $.connection.hub.start();
-
         });
-
-
     </script>
 </body>
 </html>

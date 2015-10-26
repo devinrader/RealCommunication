@@ -5,7 +5,7 @@
 </head>
 <body>
     
-    <video id="local-audio" autoplay controls></video>
+    <video id="local-video" autoplay controls></video>
     
     <script type="text/javascript">
         navigator.getUserMedia = (navigator.getUserMedia ||
@@ -13,22 +13,15 @@
                        navigator.mozGetUserMedia ||
                        navigator.msGetUserMedia);
 
-
         if (navigator.getUserMedia) {
-
             navigator.getUserMedia(
-
                 { 'audio': true, 'video':true },
-
                 function (stream) {
-
                     document.querySelector('video').src = window.URL.createObjectURL(stream);
-
                 },
-                function (err) { }
-
-                );
-
+                function (err) {
+                    console.log(err);
+                });
         }
     </script>
 </body>

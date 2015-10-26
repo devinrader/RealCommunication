@@ -30,6 +30,7 @@
         var options = { 'iceServers': null };
 
         // 1: Define new peer connection
+        // To configure STUN and TURN servers pass the options object into the contructor
         var pc = new PeerConnection(null);
 
         $(function () {
@@ -39,21 +40,14 @@
 
             // Step 5: Listen for the Answer and set as remote description
             signalingServer.client.onAnswer = function (answer) {
-
                 var rd = new SessionDescription(JSON.parse(answer));
-
                 pc.setRemoteDescription(rd, function () { }, function (err) { });
-
-
             }
 
             // Step 4: Listen for ICE candidates from Alice
             signalingServer.client.onCandidate = function (candidate) {
-
                 var ice = new IceCandidate(JSON.parse(candidate));
-
                 pc.addIceCandidate(ice, function () { }, function (err) { });
-
             }
 
             if (navigator.getUserMedia) {
@@ -76,9 +70,7 @@
 
                             }, function (err) { })
 
-
                         }, function (err) { });
-
 
                     },
                     function(err) {
@@ -88,7 +80,6 @@
             }
 
             $.connection.hub.start();
-
         });
     </script>
 </body>
